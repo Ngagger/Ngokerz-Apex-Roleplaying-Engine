@@ -1,0 +1,51 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// These are commands purely for testing modules of the engine.
+// These are not intended for public use in the game itself.
+
+// LibapxCommandExperiment
+// =====================
+// test of new command system using func refs
+void LibapxCommandExperiment(int user, unitgroup u, string argv, int spawningCount, string bracketText) {
+	
+}
+
+int strcmp(string k1, string k2) {
+	//LibapxPrint(PlayerGroupAll(), k1);
+	//LibapxPrint(PlayerGroupAll(), k2);
+
+	return StringCompare(DataTableGetString(true, k1), DataTableGetString(true, k2), c_stringCase);
+}
+
+// test sort the input args
+void LibapxCommandSort(int user, unitgroup u, string argv, int spawningCount, string bracketText) {
+	string var = "TESTVAR";
+	int i = 0;
+	int n;
+	string arg = LibapxArg(argv, 2);
+	string s = "";
+
+	// test
+	LibapxPrint(PlayerGroupAll(), LibapxStringTrim(argv));
+
+	while( arg != "" ) {
+		DataTableSetString(true, var + " " + IntToString(i), arg);
+		i += 1;
+		arg = LibapxArg(argv, 2 + i);
+	}
+
+	libxQsort(var + " 0", i, c_dataTypeString, strcmp);
+
+	for( n = 0; n < i; n += 1 ) {
+		s = s + DataTableGetString(true, var + " " + IntToString(n)) + " ";
+		DataTableValueRemove(true, var + " " + IntToString(n));
+	}
+
+	LibapxPrint(PlayerGroupAll(), s);
+}

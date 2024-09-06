@@ -1,0 +1,81 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// creates, removes key/values from a section in player bank
+// !!! BankSave required to ensure the changes persist
+void LibapxBankCreate(string section, string key, string content, int player) {
+	BankValueSetFromString(gv_LibapxPlayer[player].bankStorage, section, key, content);
+	BankSave(gv_LibapxPlayer[player].bankStorage);
+}
+
+void LibapxBankRemove(string section, string key, int player) {
+	BankKeyRemove(gv_LibapxPlayer[player].bankStorage, section, key);
+	BankSave(gv_LibapxPlayer[player].bankStorage);
+}
+
+void LibapxBankSectionRemoveAll(string section, int player) {
+	BankSectionRemove(gv_LibapxPlayer[player].bankStorage, section);
+	BankSave(gv_LibapxPlayer[player].bankStorage);
+}
+
+// LibapxBankKeyContentDump
+// =================
+// prints out content of bank value
+void LibapxBankKeyContentDump(string section, string key, int player) {
+	if( BankKeyExists(gv_LibapxPlayer[player].bankStorage, section, key) ) {
+		LibapxPrintOutput(player, StringCase(section, true) + ": " + key);
+		LibapxPrintOutput(player, "CONTENT: " + BankValueGetAsString(gv_LibapxPlayer[player].bankStorage, section, key));
+	}
+	else {
+		LibapxPrintError(player, StringCase(section, true) + " " + key + " DOES NOT EXIST");
+	}
+}
+
+// LibapxBankSectionDump
+// =================
+// lists all of a player's aliases/templates
+void LibapxBankSectionDump(string section, int player) {
+	int count = BankKeyCount(gv_LibapxPlayer[player].bankStorage, section);
+	string keys = "[";
+
+	if( count ) {
+		while(count) {
+			keys = keys + "\'" + BankKeyName(gv_LibapxPlayer[player].bankStorage, section, count - 1) + "\',";
+			count -= 1;
+		}
+		// remove extra ','
+		keys = StringSub(keys, 1, StringLength(keys) - 1) + "]";
+		LibapxPrintOutput(player, StringCase(section, true) + ":\n" + keys);
+	}
+	else {
+		LibapxPrintOutput(player, "You have no " + section);
+	}
+}
+
+
+void LibapxPopulateWireframesUi(int p);
+
+void LibapxBankLoad() {
+	int i;
+	int player;
+
+	for (i = 1; i <= PlayerGroupCount(PlayerGroupActive()); i += 1) {
+		player = PlayerGroupPlayer(PlayerGroupActive(), i);
+		LibapxPrintText(PlayerGroupActive(), StringToText("<c val=\"77aaff\">Bank loading for ")+ TextWithColor(PlayerName(player), ColorFromIndex( PlayerGetColorIndex(player, false), c_teamColorDiffuse)));
+	
+		gv_LibapxPlayer[player].bankStorage = BankLoad( gv_gv_LibapxPlayerBankName,  player);
+		BankWait(gv_LibapxPlayer[player].bankStorage);
+		gv_LibapxPlayer[player].aliases = LibapxSortAliases(player);
+		gv_LibapxPlayer[player].wireframes = LibapxWireframesGetAll(player);
+		gv_LibapxPlayer[player].banksloaded = true;
+		LibapxPopulateWireframesUi(player);
+		LibapxChkAllAliases(player);
+	}
+	
+	LibapxPrintText(PlayerGroupActive(), StringToText("<c val=\"00ff00\">All banks loaded :)</c>"));
+}

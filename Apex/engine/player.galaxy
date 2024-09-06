@@ -1,0 +1,550 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+//Prototypes
+void LibapxChkAllAliases(int player);
+
+// basic game player constants
+const int gv_LibapxMaxPlayers = 16; // max players supported is 16 (0 - neutral, 15 - hostile)
+static const int ParserThreadCount = 500; // Max thread count for parser
+const string gv_gv_LibapxPlayerBankName = "ApexBank";
+const int gv_gv_LibapxPlayerNeutral = 0;
+const int gv_LibapxPLayerHostile = 15;
+const int gv_LibapxUiPanelNone = -1;
+
+
+//DEBUG
+//Sets the bank for the wireframe
+void LibapxWireframeBankLayerSet(
+    //Not wireframe attr
+    int p, string wireframe, bool create, int layer, 
+    //Wireframe attrs
+    string path, int r, int g, int b, bool saturation, int renderPriority, int OffsetX, int OffsetY, int width, int height, int rotation, int alpha
+);
+
+
+// gv_LibapxPlayerStruct
+// =======================
+// contains all player properties
+struct gv_LibapxPlayerProperties {
+
+	// API 
+	// =========
+	// Variables for input data streaming
+	string apiStringInput;
+	bool apiReading;
+
+	// mousePosition
+	// =================
+	// Location of player mouse
+	point mousePosition;		// x,y position in world
+	point mousePositionUi;	// x,y position in the game UI
+	point mousePositionLasttickUi;
+
+	//Wireframe specifics.
+	string wireframe;
+
+	// Permission Level UI
+	int permissionLevelUi;
+
+	// keys + mouse flags
+	// ================
+	// flags for whether keys/mouse pressed up/down:
+	// false - up
+	// true - down
+	bool keyShift;
+	bool keyCtrl;
+	bool keyCtrlLasttick;
+	bool keyAlt;
+	bool keyTab;
+
+	//new keys
+	bool key_0;
+	bool key_1;
+	bool key_2;
+	bool key_3;
+	bool key_4;
+	bool key_5;
+	bool key_6;
+	bool key_7;
+	bool key_8;
+	bool key_9;
+	//Done
+	bool keyA;
+	bool keyB;
+	bool keyC;
+	bool keyD;
+	bool keyE;
+	bool keyF;
+	bool keyG;
+	bool keyH;
+	bool keyI;
+	bool keyJ;
+	bool keyK;
+	bool keyL;
+	bool keyM;
+	bool keyN;
+	bool keyO;
+	bool keyP;
+	bool keyQ;
+	bool keyR;
+	bool keyS;
+	bool keyT;
+	bool keyU;
+	bool keyV;
+	bool keyW;
+	bool keyX;
+	bool keyY;
+	bool keyZ;
+	bool keyUp;
+	bool keyDown;
+	bool keyLeft;
+	bool keyRight;
+	bool keyPgUp;
+	bool keyPgDown;
+	bool keyNumPad0;
+	bool keyNumPad1;
+	bool keyNumPad2;
+	bool keyNumPad3;
+	bool keyNumPad4;
+	bool keyNumPad5;
+	bool keyNumPad6;
+	bool keyNumPad7;
+	bool keyNumPad8;
+	bool keyNumPad9;
+	bool keyNumPadPlus;
+	bool keyNumPadMinus;
+	bool keyNumPadMultiply;
+	bool keyNumPadDivide;
+	bool keyNumPadDecimal;
+	bool keyGrave;
+
+
+	bool mouseRight;
+
+
+	// chatMsg
+	// ================
+	// player chat message for parsing
+	// when running a command, chatMsg is set to the command being run
+	string chatMsg;
+
+	//Spawncounter
+	//===============
+	//An integer to emulate threads within the parser.
+	int spawningCount;
+
+	// doneParsing
+	// =================
+	// flag to manually interrupt and stop the parser for the player
+	// can be used by commands to stop parsing early
+	bool doneParsing;
+
+	// permissionLevel
+	// =================
+	// Permission level of a player (default - 0, mod - 1, admin - 2)
+	int permissionLevel;
+
+	// permissionAllow
+	// =================
+	// String that contains single game instance of commands,
+	// delineated by spaces, of commands player CAN use
+	// For a single game instance, these will transfer even if admin changes
+	string permissionsAllow;
+
+	// permissionBlock
+	// =================
+	// String that contains single game instance of commands,
+	// delineated by spaces, of commands player CANNOT use
+	// For a single game instance, these will transfer even if admin changes
+	string permissionsBlock;
+
+	// general permissions flags
+	// ==================
+	bool disabled;			// can player use any commands
+	bool muted;				// can player chat (only applies to OOC)
+	bool aliasBlocked;		// can player use aliases system
+	bool templateBlocked;	// can player use template system
+
+
+	// isPlacingUnit
+	// ===============
+	// flag for using @spawn mouse-click style
+	bool isPlacingUnit;
+
+	// spawnSplat
+	// ==============
+	// hovers under cursor for mouse-click @spawn placement
+	unit spawnSplat;
+	fixed spawnSplatX;	// x scaling
+	fixed spawnSplatY;	// y scaling
+	fixed spawnSplatZ;	// z scaling
+
+	// spawn instance variables
+	// ============
+	// these record a player's previous usage of @spawn
+	// so players can repeat @spawn without parameters
+	// to repeat the last instance
+	string spawnInstanceType;		// unit type
+	int spawnInstanceCount;		// # spawned
+	int spawnInstancePlayer;		// player units spawned for
+	region spawnInstanceLocation;	// location spawned
+
+	// bankStorage
+	// ===============
+	// player's bank containing things that persist between games
+	// (aliases, templates, setups, etc...)
+	bank bankStorage;
+
+	// aliases
+	// ===============
+	// alphebetized list of player's aliases as a cache to avoid
+	// resorting player's alias list multiple times
+	string aliases;
+
+	//wireframes
+	// ====================
+	// A list of a players current wireframes.
+	string wireframes;
+	//Current displayed wireframe layer count and dialogs
+	int wireframeLayerCount;
+	int[100] wireframeLayers;
+	string previousWireframe;
+
+	//Current displayed wireframe layer count and dialogs
+	int fakewireframeLayerCount;
+	int[100] fakewireframeLayers;
+	string previousFakewireframe;
+	
+	// mapRevealer
+	// ===============
+	// map revealer for entire map (revealers player specific)
+	revealer mapRevealer;
+
+	// search_ variables
+	// ==============
+	// used to mark player's search catalog, index, and query
+	// when using the "\search" command
+	int searchCatalog;			// current search catalog
+	int searchIndex;			// current search index (> 0)
+	string searchLastQuery;	// current search term
+
+	// waygateDialog
+	// ============
+	// dialog and button for using region waygates (teleport)
+	int waygateDialog;
+	int waygateDialogControlBtn;
+
+	// activeUiPanel
+	// ============
+	// for use with ui module: the current active ui panel dialog, where
+	// one panel is allowed to be active at a time.
+	// The value here is in terms of the ARRAY list of panels, NOT the
+	// dialog integer value itself.
+	int activeUiPanel;
+
+	//Scaler for units
+	fixed scaler;
+
+	//delay for Attach
+	fixed delay;
+	
+	//Custom props for >super
+	string clanTag;
+	string name;
+
+	//Editor mouse wheel trigger;
+	trigger editorMouseWheel;
+	//Editor camera toggle
+	bool editorToggled;
+	//Height
+	fixed editorHeightoffset;
+	//Rotating still,
+	bool editorRotating;
+
+	//Unit for spawner
+	unit spawnerUnit;
+	bool spawnerToggled;
+
+	//This name controler
+	bool nameDisplay;
+	bool nameLeveledDisplay;
+
+	//Name and subtitle displays when selectingn units
+	int unitDisplayName;
+	int unitDisplaySubtitle;
+
+	//Description open toggle
+	bool descriptionOpen;
+	string lastRenderedDesc;
+	string lastRenderedDescName;
+
+	//Banks loaded(flag is bank has been loaded/is in the process of being loaded)
+	bool banksloaded;
+
+	//player color
+	bool displayColor;
+	color customColor;
+	bool rainbow;
+
+	//CAmera stuff
+	point cameraPosition;
+
+	//Help messages
+	bool helpMessages;
+};
+
+// gv_LibapxPlayerParserProperties
+// =======================
+// contains parser context
+struct gv_LibapxPlayerParserProperties {
+	// context
+	// ===============
+	// unitgroup target for running commands
+	unitgroup context;
+};
+
+
+
+// gv_LibapxPlayer[gv_LibapxMaxPlayers]
+// ====================================
+// global array for players with index corresponding to player index
+gv_LibapxPlayerProperties[gv_LibapxMaxPlayers] gv_LibapxPlayer;
+
+
+// gv_LibapxPlayer[gv_LibapxMaxPlayers]
+// ====================================
+// global array for parser with index corresponding to player index and parsing count
+//10 theoretical threads able to run in sequence, I'm going to be a super indian.
+gv_LibapxPlayerParserProperties[gv_LibapxMaxPlayers][ParserThreadCount] gv_LibapxPlayerParser;
+
+
+// LibapxSortAliases (prototype)
+// =======================
+// Prototype for sorting player aliases. Actual function definition
+// provided by chat/aliases.galaxy.
+string LibapxSortAliases(int player);
+
+
+//Retrieves the name of all the wireframes.
+string LibapxWireframesGetAll(int player);
+
+
+// LibapxInitializePlayer
+// ==============================
+// initialize players (default settings)
+void gv_LibapxPlayerInitialize(int player) {
+	unit u;
+	gv_LibapxPlayer[player].mapRevealer = VisRevealerCreate(player, RegionEntireMap());
+	gv_LibapxPlayer[player].mousePosition = RegionGetCenter( RegionEntireMap() );
+	gv_LibapxPlayer[player].mousePositionUi = Point(0, 0);
+	gv_LibapxPlayer[player].permissionLevel = 0;
+	gv_LibapxPlayer[player].scaler = 1;
+	gv_LibapxPlayer[player].spawnerUnit = null;
+	gv_LibapxPlayer[player].spawnerToggled = false;
+	gv_LibapxPlayer[player].editorToggled = false;
+	gv_LibapxPlayer[player].spawnSplat = null;
+	gv_LibapxPlayer[player].spawningCount = 1;
+	gv_LibapxPlayer[player].delay =  0.08;
+	gv_LibapxPlayer[player].waygateDialog = 0;
+	gv_LibapxPlayer[player].clanTag = "";
+	gv_LibapxPlayer[player].name = "";
+	gv_LibapxPlayer[player].apiStringInput = "";
+	gv_LibapxPlayer[player].editorHeightoffset = 0.0;
+	gv_LibapxPlayer[player].wireframe = gv_DefaultWireframeString;
+	gv_LibapxPlayer[player].activeUiPanel = gv_LibapxUiPanelNone;
+	gv_LibapxPlayer[player].banksloaded = false;
+	gv_LibapxPlayer[player].displayColor = false;
+	gv_LibapxPlayer[player].rainbow = false;
+	gv_LibapxPlayer[player].helpMessages = true;
+
+	CameraPan( player, RegionGetCenter(RegionEntireMap()), 0.0, 10.0, 10.0, false );
+}
+
+
+
+// gv_LibapxPlayerNameColored
+// ===========================
+// returns a text string of player name with color
+text gv_LibapxPlayerNameColored(int player) {
+	string clanTag;
+	color playerColor;
+	if(gv_LibapxPlayer[player].displayColor) {
+		if(gv_LibapxPlayer[player].rainbow) {
+			playerColor = Color(RandomInt(0,1)*100, RandomInt(0,1)*100, RandomInt(0,1)*100);
+		}
+		else {
+			playerColor = gv_LibapxPlayer[player].customColor;
+		}
+	}
+	else {
+		playerColor = ColorFromIndex( PlayerGetColorIndex(player, false), c_teamColorDiffuse);
+	}
+
+	if(gv_LibapxPlayer[player].clanTag == "") {
+		clanTag = " <d Player=\"" + IntToString(player) + "\" GameValue=\"PlayerClanTag\"/> ";
+	}
+	else {
+		clanTag = "<"+gv_LibapxPlayer[player].clanTag+"> ";
+	}
+	return TextWithColor( StringToText( clanTag ) + PlayerName(player), playerColor );
+}
+
+
+// LibapxColorToPlayerDefault
+// ==========================
+// Returns the default player index for a color string
+int LibapxColorToPlayerDefault(string colour) {
+	if( colour == "white" ) {
+		return 0;
+	} else if( colour == "red" ) {
+		return 1;
+	} else if( colour == "blue") {
+		return 2;
+	} else if( colour == "teal" ) {
+		return 3;
+	} else if( colour == "purple" ) {
+		return 4;
+	} else if( colour == "yellow" ) {
+		return 5;
+	} else if( colour == "orange" ) {
+		return 6;
+	} else if( colour == "green" ) {
+		return 7;
+	} else if( colour == "lightpink" ) {
+		return 8;
+	} else if( colour == "violet" ) {
+		return 9;
+	} else if( colour == "lightgrey" ) {
+		return 10;
+	} else if( colour == "lightgray" ) {
+		return 10;
+	} else if( colour == "darkgreen" ) {
+		return 11;
+	} else if( colour == "brown" ) {
+		return 12;
+	} else if( colour == "lightgreen" ) {
+		return 13;
+	} else if( colour == "darkgrey" ) {
+		return 14;
+	} else if( colour == "darkgray" ) {
+		return 14;
+	} else if( colour == "pink" ) {
+		return 15;
+	}
+
+	return -1;
+}
+
+// LibapxColorToPlayer
+// ===================
+// Converts a color from a string to a player's index
+// (since Blizzard has no function to get color of a player as a string)
+int LibapxColorToPlayer(string colour, int user) {
+	int player = gv_LibapxMaxPlayers - 1;
+
+	// special color keywords
+	if( colour == "hostile" ) {
+		return gv_LibapxPLayerHostile;
+	} else if( colour == "neutral" ) {
+		return gv_gv_LibapxPlayerNeutral;
+	} else if( colour == "me" ) {
+		return user;
+	}
+
+	while( player >= 0) {
+		if( PlayerGetColorIndex( player, false ) == LibapxColorToPlayerDefault(colour) && PlayerStatus(player) != c_playerStatusUnused) {
+			return player;
+		}
+		player -= 1;
+	}
+
+	return -1;
+}
+
+// LibapxColorFromPlayerDefault
+// =======================
+// returns the default color for a player index (ported from Cortex)
+// (assumes mapmakers don't mess with default player color index)
+string LibapxColorFromPlayerDefault(int plr) {
+	if( plr == 0 ) {
+		return "white";
+	} else if( plr == 1 ) {
+		return "red";
+	} else if( plr == 2 ) {
+		return "blue";
+	} else if( plr == 3 ) {
+		return "teal";
+	} else if( plr == 4 ) {
+		return "purple";
+	} else if( plr == 5 ) {
+		return "yellow";
+	} else if( plr == 6 ) {
+		return "orange";
+	} else if( plr == 7 ) {
+		return "green";
+	} else if( plr == 8 ) {
+		return "lightpink";
+	} else if( plr == 9 ) {
+		return "violet";
+	} else if( plr == 10 ) {
+		return "lightgrey";
+	} else if( plr == 11 ) {
+		return "darkgreen";
+	} else if( plr == 12 ) {
+		return "brown";
+	} else if( plr == 13 ) {
+		return "lightgreen";
+	} else if( plr == 14 ) {
+		return "darkgrey";
+	} else if( plr == 15 ) {
+		return "pink";
+	}
+
+	return "";
+}
+
+// LibapxColorFromPlayer
+// ======================
+// Returns the string name of the color a player currently is (Ported from Cortex)
+// (since Blizzard PlayerColorName returns as text, which
+// cant be used for comparisons or anything useful)
+string LibapxColorFromPlayer(int plr) {
+	return LibapxColorFromPlayerDefault(PlayerGetColorIndex(plr, false));
+}
+
+void LibapxChatParseIncrement(int p) {
+	if (gv_LibapxPlayer[p].spawningCount < ParserThreadCount - 1)  {
+		gv_LibapxPlayer[p].spawningCount = gv_LibapxPlayer[p].spawningCount + 1;
+	}
+	else {
+		gv_LibapxPlayer[p].spawningCount = 1;
+	}
+}
+
+void LibapxSetTarget(int player, unitgroup target, int spawningCount) {
+	gv_LibapxPlayerParser[player][spawningCount].context = target;
+}
+
+void LibapxWaitDelay(int player) {
+	fixed time = gv_LibapxPlayer[player].delay;
+	if(time < .0625) {
+		return;
+	}
+	Wait(time, c_timeGame);
+}
+
+void LibapxWaitDelayGS(int player) {
+	fixed time = gv_LibapxPlayer[player].delay;
+	fixed compareTime = .2 * gGamesetupsLoading;
+	if(time < compareTime) {
+		time = compareTime;
+	}
+	
+	Wait(time, c_timeGame);
+}

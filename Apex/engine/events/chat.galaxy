@@ -1,0 +1,58 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+
+// LibapxProcessChatEvent
+// ============================
+// redirects processing as needed:
+// IF message begins with "<<" , directly output the message
+// ELSE, parse message
+
+
+void LibapxProcessChat(string msg,int user, unitgroup target) {
+	// "<<" directly dumps message to OOC (if player not muted)
+	if ( StringWord( msg, 1) == "<<" &&  !gv_LibapxPlayer[user].muted ) {
+		gv_LibapxPlayer[user].chatMsg = LibapxStringTrim( StringSub(msg, 3, StringLength(msg)) );
+		LibapxChatPrintOOC(user, gv_LibapxPlayer[user].chatMsg);
+	}
+
+
+	else if( !gv_LibapxPlayer[user].disabled ) {
+
+		// if player is mouse-click spawning, set context to spawn splat
+		if( gv_LibapxPlayer[user].isPlacingUnit ) {
+			UnitGroupAdd(target, gv_LibapxPlayer[user].spawnSplat);
+		}
+		else {
+			target = UnitGroupSelected(user);
+			target = LibapxEnforceUnitPermissions(target, user);
+		}
+
+		LibapxChatParse(msg, user, target, gv_LibapxPlayer[user].spawningCount);
+
+
+
+
+
+	}
+	else if( !gv_LibapxPlayer[user].muted ){
+		LibapxChatPrintOOC(user, gv_LibapxPlayer[user].chatMsg);
+	}
+}
+
+bool LibapxProcessChatEvent(bool testConds, bool runActions) {
+
+	int user = EventPlayer();
+
+	unitgroup target = UnitGroupEmpty();
+	gv_LibapxPlayer[user].chatMsg = LibapxStringTrim(EventChatMessage(false)); //Where injection of chat occurs
+	
+	LibapxProcessChat(gv_LibapxPlayer[user].chatMsg, user, target);
+
+	return false;
+}

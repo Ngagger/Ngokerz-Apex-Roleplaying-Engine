@@ -1,0 +1,51 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// LibapxPlayerLeaves
+// ==================
+// print message "[Player] has left the game"
+// -> if player is admin, must promote a new admin
+bool LibapxPlayerLeaves(bool testConds, bool runActions) {
+	int player = 1;
+	playergroup activePlayers = PlayerGroupActive();
+
+	LibapxPrintText(PlayerGroupAll(), gv_LibapxPlayerNameColored(EventPlayer()) + StringToText(" has left the game"));
+	
+	//Disable them
+	gv_LibapxPlayer[EventPlayer()].disabled = true;
+
+	// if admin leaves, make another player the admin
+	if( gv_LibapxPlayer[EventPlayer()].permissionLevel == LibapxPERMISSIONSLEVELADMIN ) {
+		// demote player that left
+		gv_LibapxPlayer[EventPlayer()].permissionLevel = LibapxPERMISSIONSLEVELDEFAULT;
+
+		// promote first moderator detected
+		while( player < gv_LibapxMaxPlayers ) {
+			if ( gv_LibapxPlayer[player].permissionLevel == gv_LibapxPermissionLevelMod ) {
+				gv_LibapxPlayer[player].permissionLevel = LibapxPERMISSIONSLEVELADMIN;
+				LibapxPrintText(PlayerGroupAll(), gv_LibapxPlayerNameColored(player) + StringToText(" has been promoted to admin"));
+				return true;
+			}
+			player += 1;
+		}
+
+		// otherwise promote random player (if there are players left)
+		if( PlayerGroupCount(activePlayers) == 0 ) {
+			return true;
+		}
+		player = PlayerGroupPlayer( activePlayers, RandomInt(1, PlayerGroupCount(activePlayers)) );
+		gv_LibapxPlayer[player].permissionLevel = LibapxPERMISSIONSLEVELADMIN;
+		LibapxPrintText(PlayerGroupAll(), gv_LibapxPlayerNameColored(player) + StringToText(" has been promoted to admin"));
+	}
+	// also demote any moderators
+	else if( gv_LibapxPlayer[EventPlayer()].permissionLevel == gv_LibapxPermissionLevelMod ) {
+		gv_LibapxPlayer[EventPlayer()].permissionLevel = LibapxPERMISSIONSLEVELDEFAULT;
+	}
+
+	return true;
+}

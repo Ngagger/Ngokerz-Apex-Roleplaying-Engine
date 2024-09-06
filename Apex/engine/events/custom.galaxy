@@ -1,0 +1,151 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// data table identitifiers
+const string EventTriggerDataTableIdentifier = "event ";
+const string EventTypeDataTableIdentifier = "eventType ";
+const string EventCommandsDatatableIdentifier = "eventCmds ";
+const string EventOwnerDatatableIdentifier = "eventOwner ";
+const string EventCounterDatatableIdentifier = "eventCount ";
+
+// global counter for current trigger event number
+static int EventCount = 1;
+
+// LibapxEventsList
+// ====================
+// prints out all the events created in the game
+void LibapxEventsList(int player) {
+	int i;
+	int creator;
+	string type;
+	text txt;
+
+	LibapxPrintOutput(player, "Events:");
+	LibapxPrint(PlayerGroupSingle(player), "[ID]   [Creator]                   [Type]");
+
+	for(i = 1; i < EventCount; i += 1) {
+		// skip deleted event entries
+		if( DataTableValueExists(true, EventOwnerDatatableIdentifier + IntToString(i)) != true ) {
+			continue;
+		}
+
+		creator = DataTableGetInt(true, EventOwnerDatatableIdentifier + IntToString(i));
+		type = DataTableGetString(true, EventTypeDataTableIdentifier + IntToString(i));
+
+		// create output text
+		txt = StringToText("[" + IntToString(i) + "]   ")
+		      + gv_LibapxPlayerNameColored(creator)
+			  + StringToText("           " + type);
+
+		LibapxPrintText(PlayerGroupSingle(player), txt);
+	}
+}
+
+// LibapxEventTriggerCreate
+// ====================
+// creates a custom event
+trigger LibapxEventTriggerCreate(string trig, string type, int times, int player, string cmds) {
+	trigger t = TriggerCreate(trig);
+	DataTableSetTrigger(true, EventTriggerDataTableIdentifier + IntToString(EventCount), t);
+	DataTableSetString(true, EventTypeDataTableIdentifier + IntToString(EventCount), type);
+	DataTableSetString(true, EventCommandsDatatableIdentifier + IntToString(EventCount), cmds);
+	DataTableSetInt(true, EventOwnerDatatableIdentifier + IntToString(EventCount), player);
+	DataTableSetInt(true, EventCounterDatatableIdentifier + IntToString(EventCount), times);
+	EventCount += 1;
+
+	return t;
+}
+
+// LibapxEventTriggerCreate
+// ======================
+// removes an event trigger for a player,
+// with permissions checking and printing output messages
+// -> only event creator, mods, and hosts can remove events
+void LibapxEventTriggerRemove(int player, int id) {
+	trigger t;
+	int owner = DataTableGetInt(true, EventOwnerDatatableIdentifier + IntToString(id));
+
+	if( player != owner && gv_LibapxPlayer[player].permissionLevel < gv_LibapxPermissionLevelMod ) {
+		LibapxPrintError(player, "You do not have permission to remove this event.");
+	} else {
+		t = DataTableGetTrigger(true, EventTriggerDataTableIdentifier + IntToString(id));
+		TriggerDestroy(t);
+
+		// clean up data table
+		DataTableValueRemove(true, EventTriggerDataTableIdentifier + IntToString(id));
+		DataTableValueRemove(true, EventTypeDataTableIdentifier + IntToString(id));
+		DataTableValueRemove(true, EventOwnerDatatableIdentifier + IntToString(id));
+		DataTableValueRemove(true, EventCommandsDatatableIdentifier + IntToString(id));
+		DataTableValueRemove(true, EventCounterDatatableIdentifier + IntToString(id));
+
+		LibapxPrintSuccess(player, "Event deleted!");
+	}
+
+}
+
+// LibapxEventTriggerRemoveId
+// =======================
+// removes an event trigger (no permissions checking)
+void LibapxEventTriggerRemoveId(int id) {
+	trigger t = DataTableGetTrigger(true, EventTriggerDataTableIdentifier + IntToString(id));
+	TriggerDestroy(t);
+
+	// clean up data table
+	DataTableValueRemove(true, EventTriggerDataTableIdentifier + IntToString(id));
+	DataTableValueRemove(true, EventTypeDataTableIdentifier + IntToString(id));
+	DataTableValueRemove(true, EventOwnerDatatableIdentifier + IntToString(id));
+	DataTableValueRemove(true, EventCommandsDatatableIdentifier + IntToString(id));
+	DataTableValueRemove(true, EventCounterDatatableIdentifier + IntToString(id));
+}
+
+// LibapxEventTriggerGetCommands
+// ========================
+// get the commands string bound to a trigger
+int LibapxEventTriggerGetId(trigger t1) {
+	int i;
+	trigger t2;
+
+	// get bound cmds
+	for(i = 1; i < EventCount; i += 1) {
+		t2 = DataTableGetTrigger(true, EventTriggerDataTableIdentifier + IntToString(i));
+		if( t1 == t2 ) {
+			break;
+		}
+	}
+
+	return i;
+}
+
+
+// LibapxEventUnit
+// =======================
+// generic trigger to apply commands on a unit
+bool LibapxEventUnit(bool testConds, bool runActions) {
+	int id = LibapxEventTriggerGetId(TriggerGetCurrent());
+	string cmds = DataTableGetString(true, EventCommandsDatatableIdentifier + IntToString(id));
+	int count = DataTableGetInt(true, EventCounterDatatableIdentifier + IntToString(id));
+	unitgroup u = UnitGroupEmpty();
+	UnitGroupAdd(u, EventUnit());
+
+	// debug: print event commands
+	//LibapxPrintOutput(EventPlayer(), "UNIT EVENT COMMANDS: " + cmds);
+
+	// decrement counter (if event is to run a finite number of times)
+	if( count >= 0 ) {
+		if( count == 1 ) { // last time event runs, so remove event
+			LibapxEventTriggerRemoveId(id);
+		} else {
+			DataTableSetInt(true, EventCounterDatatableIdentifier + IntToString(id), count - 1);
+		}
+	}
+
+	// parse commands on the unit for the unit's owner
+	LibapxChatParse(cmds, UnitGetOwner(EventUnit()), u, gv_LibapxPlayer[EventPlayer()].spawningCount);
+
+	return true;
+}

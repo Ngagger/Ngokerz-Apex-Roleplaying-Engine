@@ -1,0 +1,165 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// global data table region identifier prefixes
+const string LibapxREGIONDATATABLEIDENTIFIER = "reg";
+const string LibapxREGIONIDDATATABLEIDENTIFIER = "reg";
+const string LibapxREGIONLINKDATATABLEIDENTIFIER = "regLink";
+const string LibapxREGIONANCHORDATATABLEIDENTIFIER = "regUnit"; // for #attach
+
+const string LibapxWAYGATEDATATABLEIDENTIFIER = "waygate";
+const string LibapxWAYGATEDIALOGDATATABLEIDENTIFIER = "waygateDiag";
+const string LibapxWAYGATEDIALOGREGDATATABLEIDENTIFIER = "waygateDiagReg"; //region from dialog
+const string LibapxWAYGATEANCHORDATATABLEIDENTIFIER = "waygateDiagUnit";
+
+// the dummy unit type used to anchor the waygate dialog "ENTER" button
+// (actual declaration occurs in data.galaxy, due to include order issues)
+// const string LibapxWaygateDialogAnchorUnit = "BeaconZerg";
+
+// region teleport counter
+// (must start at one because unit custom val defaults to 0)
+int LibapxRegionWaygateCounter = 1;
+
+// LibapxRegionGetName
+// ==================
+// Regions are stored in global data table as:
+// "reg [player number] [name]", e.g. "reg 1 R"
+string LibapxRegionGetName(string name, int player) {
+	return (LibapxREGIONDATATABLEIDENTIFIER + " " + IntToString(player) + " " + StringCase(name, false));
+}
+
+// LibapxRegionGetPublicName
+// ==================
+// Returns the public (user inputted) name for the region
+// (the third word in the region data table name)
+string LibapxRegionGetPublicName(string dataTableName) {
+	return StringWord(dataTableName, 3);
+}
+
+// LibapxRegion
+// ===============
+// Returns the region associated with the input PUBLIC NAME for a given
+// player. If the region does not exist, returns null.
+region LibapxRegion(string name, int player) {
+	region r = null;
+	string rgnDtableName = LibapxRegionGetName(name, player);
+	if( DataTableValueExists(true, rgnDtableName) ) {
+		r = DataTableGetRegion(true, rgnDtableName);
+	}
+	return r;
+}
+
+// LibapxCreateWaygateDialogs
+// =====================
+// creates a dummy unit to act as an anchor for the waygate dialog. the unit
+// is invisible to all players and simply acts as a reference actor for
+// attaching the "Enter" dialog button.
+void LibapxCreateWaygateDialog(string rgnName) {
+	point p = RegionGetCenter( DataTableGetRegion(true, rgnName) );
+	int dialog = LibapxCreateDialog(90, 44, 0, 0, 0); // create the waygate dialog
+	unit anchor;
+	int i = 1;
+	LibapxCreateDialogBtn(dialog, 90, 44, c_anchorCenter, 0, 0, "Click to teleport these unit(s).", "Enter");
+	DataTableSetDialog(true, LibapxWAYGATEDIALOGDATATABLEIDENTIFIER + " " + rgnName, dialog);
+	DataTableSetString(true, LibapxWAYGATEDIALOGREGDATATABLEIDENTIFIER + " " + IntToString(dialog), rgnName);
+
+	// anchor the waygate dialog onto the unit
+	// first check if a region is attached to a unit:
+	if( DataTableValueExists(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgnName) ) {
+		anchor = DataTableGetUnit(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgnName);
+		if( anchor != null && UnitIsAlive(anchor) ) { // attach waygate dialog to region's unit anchor
+			UnitSetCustomValue(anchor, gv_LibapxUnitIndexWaygateDialog, IntToFixed(dialog));
+			DialogSetPositionRelativeToUnit(dialog, anchor, "RefOrigin", -60, 0);
+			DialogSetVisible(dialog, PlayerGroupAll(), true);
+			return;
+		}
+		else { // anchor == null, unit doesn't exist, e.g. unit has been killed/removed
+			DataTableValueRemove(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgnName);
+		}
+	}
+	// else, create a static unit anchor on ground
+	UnitCreate(1, LibapxWaygateDialogAnchorUnit, c_unitCreateIgnorePlacement, 0, p, 270.0);
+	//ActorSend(libNtve_gf_MainActorofUnit(UnitLastCreated()), "SetOpacity {0.1}"); // set opacity to hide
+	// hide the beacons for all players
+	for( i = 1; i < gv_LibapxMaxPlayers; i += 1 ) {
+		ActorSend(libNtve_gf_MainActorofUnit(UnitLastCreated()), "SetFilterPlayers " + IntToString(i));
+	}
+	UnitSetCustomValue(UnitLastCreated(), gv_LibapxUnitIndexWaygateAnchor, 1.0);
+	DataTableSetUnit(true, LibapxWAYGATEANCHORDATATABLEIDENTIFIER + " " + rgnName, UnitLastCreated());
+
+	DialogSetPositionRelativeToUnit(dialog, UnitLastCreated(), "RefOverhead", -60, 0);
+	//DialogSetVisible(dialog, PlayerGroupAll(), true);
+}
+
+// LibapxLinkRegions
+// =================
+// region links involve 2 data table parameters:
+// -> [regionNameFromID] (string) : links a waygate by ID to a region name (for quick region check via loop)
+// -> [nameToLinkedRegionId] (int) : stores the [regionNameFromID] (an integer ID) of the linked region
+// (presumes input region names already in proper format with LibapxRegionGetName)
+void LibapxLinkRegions(string rgnName_1, string rgnName_2) {
+	// create a link from region_1 to region_2
+	DataTableSetString(true, LibapxWAYGATEDATATABLEIDENTIFIER + " " + IntToString(LibapxRegionWaygateCounter), rgnName_1);
+	DataTableSetInt(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgnName_1, LibapxRegionWaygateCounter + 1);
+	LibapxRegionWaygateCounter += 1;
+
+	// create a link from region 2 to region 1
+	DataTableSetString(true, LibapxWAYGATEDATATABLEIDENTIFIER + " " + IntToString(LibapxRegionWaygateCounter), rgnName_2);
+	DataTableSetInt(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgnName_2, LibapxRegionWaygateCounter - 1);
+	LibapxRegionWaygateCounter += 1;
+
+	LibapxCreateWaygateDialog(rgnName_1);
+	LibapxCreateWaygateDialog(rgnName_2);
+}
+
+// LibapxRegionRemoveLinks
+// =====================
+// checks if there are linked regions, from a region name,
+// and remove links if exist
+void LibapxRegionRemoveLinks(string rgn1Name, int player) {
+	string rgn2Name;
+	int rgn_2Id;
+	int reg1Dialog;
+	int reg2Dialog;
+
+	if( DataTableValueExists(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgn1Name) ) {
+		rgn_2Id = DataTableGetInt(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgn1Name);
+		rgn2Name = DataTableGetString(true, LibapxWAYGATEDATATABLEIDENTIFIER + " " + IntToString(rgn_2Id) );
+
+		// remove the region linking data
+		DataTableValueRemove(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgn2Name);
+		DataTableValueRemove(true, LibapxWAYGATEDATATABLEIDENTIFIER + " " + IntToString(rgn_2Id));
+
+		DataTableValueRemove(true, LibapxREGIONLINKDATATABLEIDENTIFIER + " " + rgn1Name);
+		DataTableValueRemove(true, LibapxWAYGATEDATATABLEIDENTIFIER + " " + IntToString(rgn_2Id - 1));
+
+		// remove associated waygate dialogs and unit anchors
+		reg1Dialog = DataTableGetDialog(true, LibapxWAYGATEDIALOGDATATABLEIDENTIFIER + " " + rgn1Name);
+		reg2Dialog = DataTableGetDialog(true, LibapxWAYGATEDIALOGDATATABLEIDENTIFIER + " " + rgn2Name);
+		DialogDestroy(reg1Dialog);
+		DialogDestroy(reg2Dialog);
+		DataTableValueRemove(true, LibapxWAYGATEDIALOGREGDATATABLEIDENTIFIER + " " + IntToString(reg1Dialog));
+		DataTableValueRemove(true, LibapxWAYGATEDIALOGREGDATATABLEIDENTIFIER + " " + IntToString(reg2Dialog));
+
+		// remove waygate static anchor units
+		if( DataTableValueExists(true, LibapxWAYGATEANCHORDATATABLEIDENTIFIER + " " + rgn1Name) ) {
+			UnitRemove(DataTableGetUnit(true, LibapxWAYGATEANCHORDATATABLEIDENTIFIER + " " + rgn1Name));
+		}
+		if( DataTableValueExists(true, LibapxWAYGATEANCHORDATATABLEIDENTIFIER + " " + rgn2Name) ) {
+			UnitRemove(DataTableGetUnit(true, LibapxWAYGATEANCHORDATATABLEIDENTIFIER + " " + rgn2Name));
+		}
+
+		// reset custom value (for waygate dialog id) for units that had waygate attached
+		if( DataTableValueExists(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgn1Name) ) {
+			UnitSetCustomValue(DataTableGetUnit(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgn1Name), gv_LibapxUnitIndexWaygateDialog, 0);
+		}
+		if( DataTableValueExists(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgn2Name) ) {
+			UnitSetCustomValue(DataTableGetUnit(true, LibapxREGIONANCHORDATATABLEIDENTIFIER + " " + rgn2Name), gv_LibapxUnitIndexWaygateDialog, 0);
+		}
+	}
+}

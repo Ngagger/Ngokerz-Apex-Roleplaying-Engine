@@ -1,0 +1,113 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+
+
+include "apex/variables/debug_var_functions.galaxy"
+include "apex/variables/general_var_functions.galaxy"
+
+void LibapxVariableFunctionInitialize() {
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        "Variable Syntax", 
+        "Variable Syntax allows you to calculate mathamatical values within apex. It is united with _varset and $variablefunctions to allow many different results. <br> Examples Below: <br> ${1} //Prints 1 <br> ${1+5} //Prints 6 <br> ${2^3} // Prints 8 <br> ${(2 * (5 *(3+6)) / 15 -2)} // prints 4 <br> ${ $RandInt(1,10) // Prints a random integer from 1 to 10 } "
+    ); 
+    LibapxVariableFunctionCreate("Debug", LibapxVariableFunctionDebug);
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Height()", 
+        "Returns the world height where of selected unit's position (based on height type). <br> Example: ${Height(1)} <br> Ground(1), Air(2), Glide(3)"
+    ); 
+    LibapxVariableFunctionCreate("Height", LibapxVariableFunctionWorldHeight);
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"UnitProp()", 
+        "Returns selected unit's unit property depending on the number given.  <br> Example:  <br> Returns current life: ${$UnitProp(3)}  <br> MovementSpeed(1) <br> Armor(2) <br> Life(3) <br> LifeRegen(4) <br> MaxLife(5) <br> Shields(6) <br> ShieldsArmor(7) <br> ShieldsRegen(8) <br> MaxShields(9) <br> Energy(10) <br> EnergyRegen(11) <br> MaxEnergy(12) <br> Height(13) <br> Kills(14) <br> KillsXp(15) <br> Level(16) <br> Speed(17) <br> CurrentSpeed(18) <br> Acceleration(19) <br> Turnrate(20) <br> Radius(21) <br> Experience(22) <br> LifePercent(23) <br> EnergyPercent (24) <br> ShieldsPercent (25)"
+    ); 
+    LibapxVariableFunctionCreate("UnitProp", LibapxVariableFunctionUnitAttribute);
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Player()", 
+        "Returns the owner's player number based on their slot in the game lobby. <br> Example:${$Player()}"
+    ); 
+    LibapxVariableFunctionCreate("Player", LibapxVariableFunctionUnitPlayerNumber);
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"MouseX()", 
+        "Returns the current mouse X position <br> Example: <br> ${$MouseX()}"
+    ); 
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"MouseY()", 
+        "Returns the current mouse Y position <br> Example: <br> ${$MouseY()}"
+    );
+    LibapxVariableFunctionCreate("MouseX", LibapxVariableFunctionMouseX);
+    LibapxVariableFunctionCreate("MouseY", LibapxVariableFunctionMouseY);
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"UnitX()", 
+        "Returns the current unit X position <br> Example: <br> ${$UnitX()}"
+    ); 
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"UnitY()", 
+        "Returns the current unit Y position <br> Example: <br> ${$UnitY()}"
+    );
+    LibapxVariableFunctionCreate("UnitX", LibapxVariableFunctionUnitX);
+    LibapxVariableFunctionCreate("UnitY", LibapxVariableFunctionUnitY);
+
+    
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"RandReal(min,max)", 
+        "Returns a random real number between the two inputs, if no inputs are provided it's between 0 and 1. <br> Example: <br> ${$RandReal(1,5)}"
+    );
+    LibapxVariableFunctionCreate("RandReal", LibapxVariableFunctionRandomFixed);
+    LibapxVariableFunctionCreate("RandReal", LibapxVariableFunctionRandomFixed);
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"RandInt(min,max)", 
+        "Returns a random integer number between the two inputs, if no inputs are provided it's between 0 and 100 <br> Example: <br> ${$RandReal(1,5)}"
+    );
+    LibapxVariableFunctionCreate("RandomInt", LibapxVariableFunctionRandomInt);
+    LibapxVariableFunctionCreate("RandInt", LibapxVariableFunctionRandomInt);
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Sin(degrees)", 
+        "Returns the sin of the input number <br> Example: <br> ${$Sin(1)}"
+    );
+    LibapxVariableFunctionCreate("Sin", LibapxVariableFunctionSin);
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Cos(degrees)", 
+        "Returns the cos of the input number <br> Example: <br> ${$Cos(1)}"
+    );
+    LibapxVariableFunctionCreate("Cos", LibapxVariableFunctionCos);
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Tan(degrees)", 
+        "Returns the tan of the input number <br> Example: <br> ${$Tan(1)}"
+    );
+    LibapxVariableFunctionCreate("Tan", LibapxVariableFunctionTan);
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Floor(number)", 
+        "Rounds value to smallest whole number<br> Example: <br> ${$Floor(1.2)} // 1"
+    );
+    LibapxVariableFunctionCreate("Floor", LibapxVariableFunctionFloor);
+
+
+    LibapxCommandsGuideSetVariableFunctionEntry(
+        gv_LibapxVariableFunctionPrefix+"Round(number)", 
+        "Rounds value to nearest whole number<br> Example: <br> ${$Round(1.2)} // 1"
+    );
+    LibapxVariableFunctionCreate("Round", LibapxVariableFunctionRound);
+
+    
+
+}

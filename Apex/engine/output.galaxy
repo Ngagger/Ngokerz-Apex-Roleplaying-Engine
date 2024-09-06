@@ -1,0 +1,83 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+const string LibapxOUTPUTSOUNDSUCCESS = "UICampaignNPCSelect";
+const string LibapxOUTPUTSOUNDERROR = "UIGenericError";
+ 
+
+
+
+
+// LibapxPrint
+// ===========================
+// prints a (string) message to all for the custom overrided chat
+void LibapxPrint(playergroup players, string msg) {
+	UIDisplayMessage(players, c_messageAreaDebug, StringToText(msg));
+}
+
+// LibapxPrintText
+// ===========================
+// prints a (text) message to the chat
+void LibapxPrintText(playergroup players, text msg) {
+	UIDisplayMessage(players, c_messageAreaDebug, msg);
+}
+
+// LibapxPrintOutput
+// ===========================
+// prints a message proceeded by "> " to single player
+// (used for various function output)
+void LibapxPrintOutput(int player, string msg) {
+	UIDisplayMessage(PlayerGroupSingle(player), c_messageAreaDebug, StringToText("> " + msg));
+}
+
+// LibapxPrintSuccess
+// ===========================
+// prints an success message to the chat
+// (green tinted message)
+void LibapxPrintSuccess(int player, string msg) {
+	UIDisplayMessage(PlayerGroupSingle(player), c_messageAreaDebug, TextWithColor(StringToText("> " + msg), Color(0,250,0)));
+	SoundPlay(SoundLink(LibapxOUTPUTSOUNDSUCCESS, -1), PlayerGroupSingle(player), 100.0, 0.0);
+}
+
+// LibapxPrintError
+// ===========================
+// prints an error message to the chat
+// (red tinted message)
+void LibapxPrintError(int player, string msg) {
+	UIDisplayMessage(PlayerGroupSingle(player), c_messageAreaDebug, TextWithColor(StringToText("> [ERR] " + msg), Color(250,0,0)));
+	SoundPlay(SoundLink(LibapxOUTPUTSOUNDERROR, -1), PlayerGroupSingle(player), 100.0, 0.0);
+}
+
+// LibapxPrintWarning
+// ===========================
+// prints a warning message to the chat
+// (yellow tinted message)
+void LibapxPrintWarning(int player, string msg) {
+	UIDisplayMessage(PlayerGroupSingle(player), c_messageAreaDebug, TextWithColor(StringToText("> [WARN] " + msg), Color(250,250,0)));
+	//SoundPlay(SoundLink(LibapxOUTPUTSOUNDERROR, -1), PlayerGroupSingle(player), 100.0, 0.0);
+}
+
+// LibapxChatPrintOOC
+// ===========================
+// prints an "out-of-character" message for all players in format
+// "[OOC] [Clan-tag] [Player-Name]: [msg]"
+void LibapxChatPrintOOC(int player, string msg) {
+	text output;
+
+	if( gv_LibapxPlayer[player].muted ) {
+		return;
+	}
+	output = StringToText("[OOC] ") + gv_LibapxPlayerNameColored(player) + StringToText(": ") + StringToText(msg);
+	UIDisplayMessage(PlayerGroupAll(), c_messageAreaDebug, output);
+}
+
+
+// Debug Log
+void DebugLog(string s) {
+	LibapxPrintOutput(EventPlayer(),"debug-log : "+ s);
+}

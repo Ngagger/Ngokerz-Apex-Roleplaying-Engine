@@ -1,0 +1,15 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+
+// gv_LibapxPlayerStructDump
+// ==============================
+// dump values of struct
+void gv_LibapxPlayerStructDump(int player) {
+
+}

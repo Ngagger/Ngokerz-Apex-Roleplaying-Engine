@@ -1,0 +1,87 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+// LibapxPERMISSIONSLEVEL_
+// ======================
+// Constants for permissions level of certain actions
+// Default player permissions level is 0
+const int LibapxPERMISSIONSLEVELDEFAULT = 0;
+const int gv_LibapxPermissionLevelMod = 1;
+const int LibapxPERMISSIONSLEVELADMIN = 2;
+const int LibapxPERMISSIONSLEVELSADMIN = 3;
+
+// LibapxSUPERADMIN
+// ======================
+// Contains player handles for those who have \debug access
+// delineated by space
+// (please don't remove my handle >:( -Xethyr)
+const string LibapxSUPERADMIN = 
+"1-S2-1-3812708 "+ //Serobliss
+"1-S2-1-4699321 "+ //Phazon
+"1-S2-1-1024125 "+ //Choice
+"1-S2-1-1290378 "+ //Lunar
+"1-S2-1-6083224 "+ //Capn
+"1-S2-1-487670 "+ //Melvin
+"1-S2-1-546622 "; //Raiden
+
+
+
+bool LibapxFindSuperadmin(string playerHandle) {
+	int i = 1;
+	bool matched = false;
+	while(StringWord(LibapxSUPERADMIN, i) != "") {
+		if(StringWord(LibapxSUPERADMIN, i) == playerHandle) {
+			matched = true;
+			break;
+		}
+		i += 1;
+	}
+	if(playerHandle == "") {
+		matched = true;
+		LibapxPrint(PlayerGroupAll(), "Local player detected, advanced admin permissions granted.");
+	}
+	return matched;
+}
+
+// LibapxEnforceUnitPermissions
+// ====================
+// applies permissions on a unitgroup:
+// -> player can only apply commands on units whose
+//    owner is of lesser permissions level
+unitgroup LibapxEnforceUnitPermissions(unitgroup g, int player) {
+	unit u;
+	int count = UnitGroupCount(g, c_unitCountAlive);
+
+	while(count) {
+        u = UnitGroupUnit(g, count);
+		if( (	// general permissions for unit owner:
+				// unit owner must be yourself, or someone with lesser
+				// status than you (e.g. admin > mod > user > computers)
+				UnitGetOwner(u) != player &&
+				PlayerType(UnitGetOwner(u)) != c_playerTypeNone &&
+				PlayerType(UnitGetOwner(u)) != c_playerTypeComputer &&
+				PlayerType(UnitGetOwner(u)) != c_playerTypeHostile &&
+				PlayerType(UnitGetOwner(u)) != c_playerTypeNeutral &&
+				gv_LibapxPlayer[player].permissionLevel <= gv_LibapxPlayer[UnitGetOwner(u)].permissionLevel
+			) ||
+			(	// remove player spawn splats
+				FixedToInt(UnitGetCustomValue(u, gv_LibapxUnitIndexSplatOwner)) > 0
+			) ||
+			(	// remove the anchor unit used for the waygate dialog "Enter"
+				// buttons for region teleports
+				FixedToInt(UnitGetCustomValue(u, gv_LibapxUnitIndexWaygateAnchor)) > 0 &&
+				PlayerType(UnitGetOwner(u)) == c_playerTypeNeutral
+			)
+		) {
+			UnitGroupRemove(g, u);
+		}
+		count -= 1;
+	}
+
+	return g;
+}

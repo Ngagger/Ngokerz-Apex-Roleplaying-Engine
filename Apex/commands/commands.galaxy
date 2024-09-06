@@ -1,0 +1,198 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+include "apex/commands/general_commands.galaxy"
+include "apex/commands/admin_commands.galaxy"
+include "apex/commands/spawn_commands.galaxy"
+include "apex/commands/unit_commands.galaxy"
+include "apex/commands/actor_commands.galaxy"
+include "apex/commands/chat_commands.galaxy"
+include "apex/commands/region_commands.galaxy"
+include "apex/commands/debug_commands.galaxy"
+
+void LibapxDefineNodef(string commandName) {} // For Some CMds
+
+void LibapxCommandsInitialize() {
+
+	// debug commands
+	// LibapxChatCommandCreate(">sort", LibapxCommandSort);
+
+	LibapxGuidePresetDescriptions();
+	// general commands - done in cmd guide
+	LibapxChatCommandCreate("_info", LibapxCommandInfo, LibapxDefineInfo);
+	LibapxChatCommandCreate("_commands", LibapxCommandListCommands, LibapxDefineListCommands);
+	LibapxChatCommandCreate("_delay", LibapxCommandDelay, LibapxDefineDelay);
+	LibapxChatCommandCreate("_players", LibapxCommandPlayers, LibapxDefinePlayers);
+	LibapxChatCommandCreate("_gamesetup", LibapxCommandGamesetup, LibapxDefineGamesetup);
+	LibapxChatCommandCreate("_control", LibapxCommandControl, LibapxDefineControl);
+	LibapxChatCommandCreate("_uncontrol", LibapxCommandUncontrol, LibapxDefineUncontrol);
+	LibapxChatCommandCreate("_ally", LibapxCommandAlly, LibapxDefineAlly);
+	LibapxChatCommandCreate("_unally", LibapxCommandUnally, LibapxDefineUnally);
+	LibapxChatCommandCreate("_search", LibapxCommandSearch, LibapxDefineSearch);
+	LibapxChatCommandCreate("_replace", LibapxCommandReplace, LibapxDefineReplace);
+	LibapxChatCommandCreate("_minerals", LibapxCommandMinerals, LibapxDefineMinerals);
+	LibapxChatCommandCreate("_gas", LibapxCommandGas, LibapxDefineGas);
+	LibapxChatCommandCreate("_terrazine", LibapxCommandTerrazine, LibapxDefineTerrazine);
+	LibapxChatCommandCreate("_supply", LibapxCommandSupply, LibapxDefineSupply);
+	LibapxChatCommandCreate("_zoom", LibapxCommandZoom, LibapxDefineZoom);
+	LibapxChatCommandCreate("_roll", LibapxCommandRoll, LibapxDefineRoll);
+	LibapxChatCommandCreate("_doodads", LibapxCommandDoodads, LibapxDefineDoodads);
+	LibapxChatCommandCreate("_showterrain", LibapxCommandShowterrain, LibapxDefineShowterrain);
+	LibapxChatCommandCreate("_camera", LibapxCommandCamera, LibapxDefineCamera);
+	LibapxChatCommandCreate("_upgrade",LibapxCommandUpgrade, LibapxDefineUpgrade);
+	LibapxChatCommandCreate("_handle",libpaxCommandGetPlayerhandle, LibapxDefineGetPlayerhandle);
+	LibapxChatCommandCreate("_relink",libpaxCommandRelink, LibapxDefineRelink);
+	LibapxChatCommandCreate("_sound", LibapxCommandSound, LibapxDefineSound);
+	LibapxChatCommandCreate("_camerapan", LibapxCommandCamerapan, LibapxDefineCamerapan);
+	LibapxChatCommandCreate("_print", libpaxCommandPrint, LibapxDefinePrint);
+	LibapxChatCommandCreate("_dataedit", LibapxCommandDataedit, LibapxDefineDataedit);
+	LibapxChatCommandCreate("_varset", LibapxCommandSetVar, LibapxDefineSetVar);
+
+	//API commands
+	LibapxChatCommandCreate("_api", LibapxCommandApi, LibapxDefineApi);
+
+	//Permissions - done in cmd guide
+	LibapxChatCommandCreate("_blacklist", LibapxCommandBlacklist, LibapxDefineBlacklist);
+
+	//Bank Commands
+	LibapxChatCommandCreate("_reloadbank", LibapxCommandReloadbank, LibapxDefineReloadbank);
+	LibapxChatCommandCreate("_helpmessages", LibapxCommandHelpmessages, LibapxDefineHelpmessages);
+
+	// admin commands - done in cmd guide
+	LibapxChatCommandCreate("!light", LibapxCommandLight, LibapxDefineLight);
+	LibapxChatCommandCreate("!kick", LibapxCommandBan, LibapxDefineBan);
+	LibapxChatCommandCreate("!disable", LibapxCommandDisable, LibapxDefineDisable);
+	LibapxChatCommandCreate("!enable", LibapxCommandEnable, LibapxDefineEnable);
+	LibapxChatCommandCreate("!mute", LibapxCommandMute, LibapxDefineMute);
+	LibapxChatCommandCreate("!unmute", LibapxCommandUnmute, LibapxDefineUnmute);
+	LibapxChatCommandCreate("!promote", LibapxCommandPromote, LibapxDefinePromote);
+	LibapxChatCommandCreate("!demote", LibapxCommandDemote, LibapxDefineDemote);
+	LibapxChatCommandCreate("!remove", LibapxCommandRemovePlayer, LibapxDefineRemovePlayer);
+	LibapxChatCommandCreate("!destroy", LibapxCommandDestroy, LibapxDefineDestroy);
+	LibapxChatCommandCreate("!fog", LibapxCommandFog, LibapxDefineFog);
+	LibapxChatCommandCreate("!skybox", LibapxCommandSkybox, LibapxDefineSkybox);
+
+	// spawn command - done in cmd guide
+	LibapxChatCommandCreate("@spawn+", LibapxCommandSpawnPlus, LibapxDefineRegionSpawnPlus);
+	LibapxChatCommandCreate("@spawn", LibapxCommandSpawn, LibapxDefineRegionSpawn);
+
+
+
+	// unit commands - done in cmd guide
+	LibapxChatCommandCreate("@select", LibapxCommandSelect, LibapxDefineSelect);
+	LibapxChatCommandCreate("@wireframe", LibapxCommandWireframe, LibapxDefineWireframe);
+	LibapxChatCommandCreate("@unitswap", LibapxCommandUnitswap, LibapxDefineUnitswap);
+	LibapxChatCommandCreate("@unitmimic", LibapxCommandUnitmimic, LibapxDefineUnitmimic);
+	LibapxChatCommandCreate("@unitvar", LibapxCommandUnitvar, LibapxDefineUnitvar);
+	LibapxChatCommandCreate("@context", LibapxCommandContext, LibapxDefineContext);
+	LibapxChatCommandCreate("@kill", LibapxCommandKill, LibapxDefineKill);
+	LibapxChatCommandCreate("@remove", LibapxCommandRemove, LibapxDefineRemove);
+	LibapxChatCommandCreate("@selectarea", LibapxCommandSelectarea, LibapxDefineSelectarea);
+	LibapxChatCommandCreate("@removearea", LibapxCommandRemovearea, LibapxDefineRemovearea);
+	LibapxChatCommandCreate("@cache", LibapxCommandCache, LibapxDefineCache);
+	LibapxChatCommandCreate("@give", LibapxCommandGive, LibapxDefineGive);
+	LibapxChatCommandCreate("@rename", LibapxCommandRename, LibapxDefineRename);
+	LibapxChatCommandCreate("@renameall", LibapxCommandRenameall, LibapxDefineRenameall);
+	LibapxChatCommandCreate("@height", LibapxCommandHeight, LibapxDefineHeight);
+	LibapxChatCommandCreate("@color", LibapxCommandColor, LibapxDefineColor);
+	LibapxChatCommandCreate("@face", LibapxCommandFace, LibapxDefineFace);
+	LibapxChatCommandCreate("@subtitle", LibapxCommandSubtitle, LibapxDefineSubtitle);
+	LibapxChatCommandCreate("@subtitleall", LibapxCommandSubtitleall, LibapxDefineSubtitleall);
+	LibapxChatCommandCreate("@desc", LibapxCommandDesc, LibapxDefineDesc);
+	LibapxChatCommandCreate("@descall", LibapxCommandDescall, LibapxDefineDesceall);
+	LibapxChatCommandCreate("@desctitle", LibapxCommandDesctitle, LibapxDefineDesctitle);
+	LibapxChatCommandCreate("@desctitleall", LibapxCommandDesctitleall, LibapxDefineDesctitleall);
+	LibapxChatCommandCreate("@tooltip", LibapxCommandTooltip, LibapxDefineTooltip);
+	LibapxChatCommandCreate("@copy", LibapxCommandCopy, LibapxDefineCopy);
+	LibapxChatCommandCreate("@kills", LibapxCommandKills, LibapxDefineKills);
+	LibapxChatCommandCreate("@level", LibapxCommandLevel, LibapxDefineLevel);
+	LibapxChatCommandCreate("@label", LibapxCommandLabel, LibapxDefineLabel);
+	LibapxChatCommandCreate("@radius", LibapxCommandRadius, LibapxDefineRadius);
+	LibapxChatCommandCreate("@state", LibapxCommandState, LibapxDefineState);
+	LibapxChatCommandCreate("@pos", LibapxCommandPosition, LibapxDefineNodef);
+	LibapxChatCommandCreate("@position", LibapxCommandPosition, LibapxDefinePosition);
+	LibapxChatCommandCreate("@move", LibapxCommandMove, LibapxDefineMove);
+	LibapxChatCommandCreate("@undo", LibapxCommandUndo, LibapxDefineUndo);
+
+	//stats - done in commands guide
+	LibapxChatCommandCreate("@behaviors", LibapxCommandBehaviors, LibapxDefineBehaviors);
+	LibapxChatCommandCreate("@addbehavior", LibapxCommandAddbehavior, LibapxDefineAddbehavior);
+	LibapxChatCommandCreate("@removebehavior", LibapxCommandRemovebehavior, LibapxDefineRemovebehavior);
+	LibapxChatCommandCreate("@weapons", LibapxCommandWeapons, LibapxDefineWeapons);
+	LibapxChatCommandCreate("@addweapon", LibapxCommandAddweapon, LibapxDefineAddweapon);
+	LibapxChatCommandCreate("@removeweapon", LibapxCommandRemoveweapon, LibapxDefineRemoveweapon);
+	LibapxChatCommandCreate("@life", LibapxCommandLife, LibapxDefineLife);
+	LibapxChatCommandCreate("@shields", LibapxCommandShields, LibapxDefineShields);
+	LibapxChatCommandCreate("@energy", LibapxCommandEnergy, LibapxDefineEnergy);
+	LibapxChatCommandCreate("@maxlife", LibapxCommandMaxlife, LibapxDefineMaxlife);
+	LibapxChatCommandCreate("@maxshields", LibapxCommandMaxshields, LibapxDefineMaxshields);
+	LibapxChatCommandCreate("@maxenergy", LibapxCommandMaxenergy, LibapxDefineMaxenergy);
+	LibapxChatCommandCreate("@liferegen", LibapxCommandLiferegen, LibapxDefineLiferegen);
+	LibapxChatCommandCreate("@shieldsregen", LibapxCommandShieldsregen, LibapxDefineShieldsregen);
+	LibapxChatCommandCreate("@energyregen", LibapxCommandEnergyregen, LibapxDefineEnergyregen);
+	LibapxChatCommandCreate("@speed", LibapxCommandSpeed, LibapxDefineSpeed);
+	LibapxChatCommandCreate("@invulnerable", LibapxCommandInvulnerable, LibapxDefineInvulnerable);
+	LibapxChatCommandCreate("@vulnerable", LibapxCommandVulnerable, LibapxDefineVulnerable);
+	LibapxChatCommandCreate("@adddamage", LibapxCommandDamage, LibapxDefineAdddamage);
+	LibapxChatCommandCreate("@removedamage", LibapxCommandDamage, LibapxDefineRemovedamage);
+	LibapxChatCommandCreate("@addrange", LibapxCommandRange, LibapxDefineAddrange);
+	LibapxChatCommandCreate("@removerange", LibapxCommandRange, LibapxDefineRemoverange);
+	LibapxChatCommandCreate("@armor", LibapxCommandArmor, LibapxDefineArmor);
+	LibapxChatCommandCreate("@shieldsarmor", LibapxCommandArmor, LibapxDefineShieldsarmor);
+	LibapxChatCommandCreate("@weaponspeed", LibapxCommandWeaponspeed, LibapxDefineWeaponspeed);
+	LibapxChatCommandCreate("@weaponspeedall", LibapxCommandWeaponspeedall, LibapxDefineWeaponspeedall);
+	LibapxChatCommandCreate("@effect", LibapxCommandEffect, LibapxDefineEffect);
+	LibapxChatCommandCreate("@order", LibapxCommandOrder, LibapxDefineOrder);
+
+	// unit visual (actor) commands - done in cmd guide
+	LibapxChatCommandCreate("@setdelay", LibapxCommandSetdelay, LibapxDefineSetdelay);
+	LibapxChatCommandCreate("@decal", LibapxCommandDecal, LibapxDefineDecal);
+	LibapxChatCommandCreate("@setscaler", LibapxCommandSetscaler, LibapxDefineSetscaler);
+	LibapxChatCommandCreate("@actrmsg", LibapxCommandActormessage, LibapxDefineActormessage);
+	LibapxChatCommandCreate("@target", LibapxCommandActoralias, LibapxDefineTarget);
+	LibapxChatCommandCreate("@scale", LibapxCommandScale, LibapxDefineScale);
+	LibapxChatCommandCreate("@tint", LibapxCommandTint, LibapxDefineTint);
+	LibapxChatCommandCreate("@modelswap", LibapxCommandModelswap, LibapxDefineModelswap);
+	LibapxChatCommandCreate("@play", LibapxCommandPlay, LibapxDefinePlay);
+	LibapxChatCommandCreate("@animspeed", LibapxCommandAnimspeed, LibapxDefineAnimspeed);
+	LibapxChatCommandCreate("@rotate", LibapxCommandRotate, LibapxDefineRotate);
+	LibapxChatCommandCreate("@statbars", LibapxCommandStatbars, LibapxDefineStatbars);
+	LibapxChatCommandCreate("@attach", LibapxCommandAttach, LibapxDefineAttach);
+	LibapxChatCommandCreate("@attach-", LibapxCommandAttachMinus, LibapxDefineAttachMinus);
+	LibapxChatCommandCreate("@rotation", LibapxCommandAttachRotation, LibapxDefineRotation);
+
+	// chat commands
+	LibapxChatCommandCreate("@narrate", LibapxCommandNarrate, LibapxDefineNarrate);
+	LibapxChatCommandCreate("@say", LibapxCommandSay, LibapxDefineSay);
+	LibapxChatCommandCreate("@setname", LibapxCommandSetname, LibapxDefineSetname);
+	LibapxChatCommandCreate("@setnamecolor", LibapxCommandSetnamecolor, LibapxDefineSetnamecolor);
+
+	// region commands - Done in cmd guide
+	LibapxChatCommandCreate("#create", LibapxCommandRegionCreate, LibapxDefineRegionCreate);
+	LibapxChatCommandCreate("#remove", LibapxCommandRegionRemove, LibapxDefineRegionRemove);
+	LibapxChatCommandCreate("#removeall", LibapxCommandRegionRemoveall, LibapxDefineRegionRemoveall);
+	LibapxChatCommandCreate("#list", LibapxCommandRegionList, LibapxDefineRegionList);
+	LibapxChatCommandCreate("#teleport", LibapxCommandRegionTeleport, LibapxDefineRegionTeleport);
+	LibapxChatCommandCreate("#attach", LibapxCommandRegionAttach, LibapxDefineRegionAttach);
+
+	// Super Command, these commands parse in the entire lines from [ to ] and do a string filter on them. Repeat, Chance, etc.
+	// Then parse the return afterwards in replacement of cmd to be parsed.
+	LibapxChatCommandCreate(">repeat", LibapxCommandRepeat, LibapxDefineRepeat);
+	LibapxChatCommandCreate(">chance", LibapxCommandChance, LibapxDefineChance);
+	LibapxChatCommandCreate(">random", LibapxCommandRandom, LibapxDefineRandom);
+	LibapxChatCommandCreate(">keypress", LibapxCommandKeypress, LibapxDefineKeypress);
+	LibapxChatCommandCreate(">moveto", LibapxCommandMoveto, LibapxDefineMoveto);
+	LibapxChatCommandCreate(">condition", LibapxCommandCondition, LibapxDefineCondition);
+	LibapxChatCommandCreate(">set", LibapxCommandSet, LibapxDefineSet);
+	LibapxChatCommandCreate(">event", LibapxCommandEvents, LibapxDefineEvents);
+	LibapxChatCommandCreate(">sequence", LibapxCommandSequence, LibapxDefineSequence);
+
+
+	//seroCmds
+	LibapxChatCommandCreate(">super", LibapxCommandSuper, LibapxDefineSuper);
+}

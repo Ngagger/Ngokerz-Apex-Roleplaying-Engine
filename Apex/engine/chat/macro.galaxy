@@ -1,0 +1,106 @@
+//=========================================================
+//		Apex Roleplaying Engine
+//		Copyright (c) 2022, Apex Group
+//=========================================================
+// This software is distributed under the MIT License:
+// <http://opensource.org/licenses/MIT>
+//=========================================================
+
+const string LibapxBANKSECTIONMACRO = "macros";
+const string LibapxMACROTOKENIDENTIFIER = "%";
+
+// LibapxMacroCommandRedirect
+// ===================
+// gets "macro ..." command from parser, redirects to function
+bool LibapxMacroCommandRedirect(string command, int player) {
+	string subcommand = StringWord(command, 2);
+	string macro = "";
+	string content = "";
+
+	// format for creating macros is:
+	// "macro create foo %a %b = @cmd1 %a; @cmd2 %b"
+	// -> string between "macro create" and "=" is the macro
+	// -> first word of macro becomes bank key
+	// -> bank value stored is: "%a %b = @cmd1 %a; @cmd2 %b"
+	if( StringEqual(subcommand, "create", c_stringNoCase) ) {
+		if( !StringContains(gv_LibapxPlayer[player].chatMsg, "=", c_stringAnywhere, c_stringNoCase) ) {
+			LibapxPrintError(player, "IMPROPER MACRO: NO ASSIGNMENT");
+			return true;
+		}
+
+		macro = StringWord(gv_LibapxPlayer[player].chatMsg, 3);
+		// verify macro name is proper:
+		// if(StringSub(macro, 1, 1) == LibapxMACROTOKENIDENTIFIER) {
+			// LibapxPrintError("MACRO NAME CANNOT BE A TOKEN", player);
+			// return true;
+		// }
+		if( StringContains(macro, "=", c_stringAnywhere, c_stringNoCase) ) {
+			LibapxPrintError(player, "MACRO NAME CANNOT HAVE AN \'=\' SYMBOL");
+			return true;
+		}
+
+		// content: remove "macro" and "create" and the macro command from chat msg string
+		content = StringReplaceWord(gv_LibapxPlayer[player].chatMsg, "macro", "", 1, c_stringNoCase);
+		content = StringReplaceWord(content, "create", "", 1, c_stringNoCase);
+		content = LibapxStringTrim( StringSub(content, StringFind(content, macro, c_stringNoCase) + StringLength(macro) + 1, StringLength(content)) );
+
+		if( content != "" ) {
+			LibapxBankCreate(LibapxBANKSECTIONMACRO, StringWord(macro, 1), content, player);
+			LibapxPrintSuccess(player, "MACRO CREATED: " + macro + " " + StringSub(content, 1, StringFind(content, "=", c_stringNoCase) - 1) + "\n"
+								  + "[\'" + LibapxStringTrim( StringSub(content, StringFind(content, "=", c_stringNoCase) + 1, StringLength(content)) ) + "\']");
+		}
+		else {
+			LibapxPrintError(player, "MACRO CANNOT BE EMPTY");
+		}
+
+		return true;
+	}
+	else if( StringEqual(subcommand, "remove", c_stringNoCase) ) {
+		macro = StringWord(command, 3);
+		if( BankKeyExists(gv_LibapxPlayer[player].bankStorage, LibapxBANKSECTIONMACRO, macro) ) {
+			LibapxBankRemove(LibapxBANKSECTIONMACRO, macro, player);
+			LibapxPrintSuccess(player, "MACRO REMOVED: " + macro);
+		}
+		else {
+			LibapxPrintError(player, "MACRO " + macro + " DOES NOT EXIST");
+		}
+	}
+	else if( StringEqual(subcommand, "removeall", c_stringNoCase) ) {
+		LibapxBankSectionRemoveAll(LibapxBANKSECTIONMACRO, player);
+		LibapxPrintSuccess(player, "ALL MACROS REMOVED");
+	}
+	else if( StringEqual(subcommand, "list", c_stringNoCase) ) {
+		LibapxBankSectionDump(LibapxBANKSECTIONMACRO, player);
+	}
+	else if( StringEqual(subcommand, "print", c_stringNoCase) ) {
+		LibapxBankKeyContentDump(LibapxBANKSECTIONMACRO, StringWord(command, 3), player);
+	}
+	else if( BankKeyExists(gv_LibapxPlayer[player].bankStorage, LibapxBANKSECTIONMACRO, subcommand) ) {
+		LibapxBankKeyContentDump(LibapxBANKSECTIONMACRO, subcommand, player);
+	}
+	else {
+		LibapxPrintError(player, "INVALID MACRO COMMAND");
+	}
+
+	return false;
+}
+
+// LibapxMacro
+// =================
+// gets the content of macro from bank and replaces tokens with
+// values from player's chat command
+string LibapxMacro(string macro, int player) {
+	string evaluated = BankValueGetAsString( gv_LibapxPlayer[player].bankStorage, LibapxBANKSECTIONMACRO, StringWord(macro, 1) ) ;
+	string tokenIdentifiers = StringSub(evaluated, 1, StringFind(evaluated, "=", c_stringNoCase) - 1);
+	int i = 1;
+
+	evaluated = LibapxStringTrim( StringSub( evaluated, StringFind(evaluated, "=", c_stringNoCase) + 1, StringLength(evaluated) ) );
+
+	// must use index i+1 for macro because that string includes the macro command itself
+	while( StringWord(tokenIdentifiers, i) != "" && StringWord(macro, i + 1) != "" ) {
+		evaluated = StringReplaceWord(evaluated, StringWord(tokenIdentifiers, i), StringWord(macro, i + 1), c_stringReplaceAll, c_stringNoCase);
+		i += 1;
+	}
+
+	return evaluated;
+}
