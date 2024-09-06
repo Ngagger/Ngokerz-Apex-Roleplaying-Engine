@@ -1,0 +1,20 @@
+
+const string LibapxToolkitPrefixWeapon = "toolkitWeapon_";
+
+void LibapxToolkitAddweapon(string toolKitName, string blizzardName)
+{
+	string storeAs = StringCase(LibapxToolkitPrefixWeapon + toolKitName, false);
+	DataTableSetString( true, storeAs, blizzardName );
+}
+
+string LibapxToolkitGetweapon(string toolKitName)
+{
+	string lookup = StringCase(LibapxToolkitPrefixWeapon + toolKitName, false);
+	string blizzardName = DataTableGetString(true, lookup);
+	if (!blizzardName) {
+		return toolKitName;
+	}
+	return blizzardName;
+}
+
+//	weapon = LibapxToolkitGetweapon(weapon);   c_gameCatalogWeapon
