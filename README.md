@@ -22,9 +22,9 @@ This assumes you have a map already created. After opening the map, go to
 Hit **Add Other...** and go to the **Battle.net** tab in the window that opens.
 After logging in to Battle.net, change the "Source" of files to
 **Map/Mod Name** and search for "apex". You should be able to find the
-**Apex RP Engine** mod published by Serobliss. Select this mod and hit OK.  
+**Ngokerz Apex RP Engine** mod published by Ngokumetsu. Select this mod and hit OK.  
 
-More preferably I recommend getting the **Serobliss Group Dependency**, this dependency comes with all the dependencies most
+More preferably I recommend getting the **Ngokerz Group Dependency**, this dependency comes with all the dependencies most
 modern maps use including the engine itself. Therefore it is the only dependency you need. Also be sure to check **"latest"** on the top left so you get automated updates. :) 
 
 This mod should now be added to your "Document dependencies" list. Move this
